@@ -38,20 +38,14 @@ jobs:
       - name: Audit the complete dependency graph
         run: npm audit --audit-level=high
 
-      # The repository has no test script. Its existing ESLint configuration
-      # imports undeclared plugins that do not all support the ESLint 10 pin;
-      # make that a separate tooling repair instead of silently weakening lint.
+      # The repository has no source unit-test suite. Its existing ESLint
+      # configuration imports undeclared plugins that do not all support the
+      # ESLint 10 pin; keep that as a separate tooling repair.
       - name: Build CommonJS, ESM, and type declarations
         run: npm run build
 
       - name: Require committed package outputs to match the build
         run: git diff --exit-code -- lib
 
-      - name: Smoke test the CommonJS package entry point
-        run: >-
-          node -e "global.React=require('react');
-          const api=require('.');
-          if (!Object.keys(api).length) process.exit(1)"
-
-      - name: Inspect the publish allowlist without publishing
-        run: npm pack --dry-run --ignore-scripts --json
+      - name: Verify the packed CommonJS, ESM, and TypeScript entry points
+        run: npm run test:consumer
